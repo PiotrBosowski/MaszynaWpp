@@ -1,0 +1,47 @@
+kody rozkazow:
+
+STP 000 | argument // UWAGA: male liczby dodatnie (np. RST 5) beda odczytywane jako STP (poniewaz pierwsze kilka bitow danej liczby jest rownych 0) - liczby ujemne za to maja na poczatku jedynki, co najczesciej prowadzi do bledu "nieznany kod rozkazu" przy probie interpretacji danej liczby jako rozkaz, przyklad:
+
+	pob liczba
+	stp
+	liczba: rst 1
+
+jesli nie damy rozkazu stp oddzielajacego kod od zmiennych, program dojdzie do linijki "liczba: rst 1" i sprobuje zinterpretowac ja jako rozkaz - jedynka zapisana w komorce pamieci ma postac 0000000001, wiec program odczyta to jako STP|000001 i zakonczy dzialanie programu;
+	
+	pob liczba
+	//stp
+	liczba: rst 5
+
+jesli jednak pod indeksem liczba: skryje sie liczba ujemna (reprezentowana w pamieci jako 111111011), przy probie odczytu rozkazu z tej komorki program pobierze pierwsze 4 bity rozkazowe (1111) i  w wiekszosci przypadkow zglosi blad, ze nie zna takiego rozkazu
+
+DOD 001 | argument
+ODE 010 | argument
+POB 011 |
+LAD 100 | argument
+SOB 101 |
+
+///////////////////////////////////////////////////////////////////////
+
+Visual Studio binary representation of an int:
+Console.WriteLine(sizeof(int));
+Console.WriteLine(Convert.ToString(-2173, 2));
+Console.WriteLine("00000000000000000000" + Convert.ToString(2173, 2));
+
+4
+11111111111111111111011110000011
+00000000000000000000100001111101
+
+Its called notacja uzupelenieniowa do 2, just as in Maszyna W.
+
+///////////////////////////////////////////////////////////////////////
+
+Nie wiedziec dlaczego Maszyna W pozwala na ustawienie dowolnej bitowosci pracy (od 8 do 24 ze skokiem 1). Taki maly skok wydaje sie byc 1) zupelnie niepotrzebny 2) zupelnie odbiegajacy od rzeczywistosci - zadne rzeczywiste rozwiazania nie daja mozliwosci ustawienia np. 13 bitow pracy - architektura i tak bedzie np. 16 bitowa, a 3 bity pozostana niewykorzystane. Nie ma to zadnego uzasadnienia i nie zmniejszy objetosciowo kodu programu. Propozycja: bitowosc ze skokiem 8 od 8 az do 64 bitow + plynna mozliwosc ustawienia proporcji miedzy liczba bitow rozkazu a liczba bitow argumentu.
+
+///////////////////////////////////////////////////////////////////////
+
+Konflikty na magistrali:
+
+//w przypadku konfliktu na magistrali nastepuje sciaganie zerem (na kazdym bicie slowa wykonujemy AND - tylko 2,3,4,... jedynek da 1, wystarczy jedno 0 i wartosc bitu to 0)
+//jezeli 1 urzadzenie zacznie nadawac sygnal 00001111 a drugie 01010101 - dostaniemy na magistrali 00000101; jesli do tego trzecie urzadzenie zacznie nadawac sygnal 11111110 - dostaniemy na magistrali 00000100;
+//maszyna W nie powinna zglaszac w takim wypadku bledu - bo niby jak mialaby to rozpoznac? bez sensu
+zjawisko to wynika z wlasciwosci ukladow wykonanych w technologii TTL (CMOS zreszta tak samo) - jesli zewrzemy dwa wyjscia bramek o przeciwnych stanach (jedna stan wysoki, druga niski), to w miejcu zwarcia otrzymamy stan... niski (wyjsciowy tranzystor bramki o stanie 0 bedzie zwierac caly prad do masy).
